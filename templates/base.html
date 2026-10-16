@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}{{ STORE_NAME }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<nav class="navbar">
+  <a class="brand" href="{{ url_for('dashboard') }}">{{ STORE_NAME }}</a>
+  <button class="menu-toggle" onclick="document.querySelector('.navbar ul').classList.toggle('open')">Menu</button>
+  <ul>
+    <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+    <li><a href="{{ url_for('sales.pos') }}">Sell</a></li>
+    <li><a href="{{ url_for('sales.history') }}">Sales</a></li>
+    <li><a href="{{ url_for('products.list_products') }}">Products</a></li>
+    <li><a href="{{ url_for('stock.index') }}">Stock</a></li>
+    <li><a href="{{ url_for('customers.index') }}">Customers</a></li>
+    {% if current_user.is_manager %}
+      <li><a href="{{ url_for('suppliers.index') }}">Suppliers</a></li>
+      <li><a href="{{ url_for('purchases.index') }}">Purchases</a></li>
+      <li><a href="{{ url_for('discounts.index') }}">Discounts</a></li>
+      <li><a href="{{ url_for('finance.index') }}">Finance</a></li>
+      <li><a href="{{ url_for('reports.index') }}">Reports</a></li>
+      <li><a href="{{ url_for('stock.movements') }}">Movements</a></li>
+    {% endif %}
+    {% if current_user.is_admin %}
+      <li><a href="{{ url_for('auth.users') }}">Users</a></li>
+      <li><a href="{{ url_for('audit.index') }}">Audit</a></li>
+    {% endif %}
+    <li><a href="{{ url_for('shifts.index') }}">Shift</a></li>
+    <li class="right"><a href="{{ url_for('auth.logout') }}">Logout ({{ current_user.username }})</a></li>
+  </ul>
+</nav>
+{% endif %}
+<main class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

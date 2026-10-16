@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<h1>Users</h1>
+
+<div class="card">
+  <h3>Add user</h3>
+  <form method="post" action="{{ url_for('auth.add_user') }}" class="grid-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Username <input name="username" required></label>
+    <label>Full name <input name="full_name"></label>
+    <label>Password <input type="password" name="password" required></label>
+    <label>Role
+      <select name="role">
+        <option value="cashier">Cashier</option>
+        <option value="manager">Manager</option>
+        <option value="admin">Admin</option>
+      </select>
+    </label>
+    <button type="submit">Add</button>
+  </form>
+</div>
+
+<table class="table">
+  <thead><tr><th>Username</th><th>Full name</th><th>Role</th><th>Active</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for u in users %}
+    <tr>
+      <td>{{ u.username }}</td>
+      <td>{{ u.full_name }}</td>
+      <td>{{ u.role }}</td>
+      <td>{{ "Yes" if u.active else "No" }}</td>
+      <td>
+        <form method="post" action="{{ url_for('auth.toggle_user', uid=u.id) }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button>{{ "Deactivate" if u.active else "Activate" }}</button>
+        </form>
+        <form method="post" action="{{ url_for('auth.reset_password', uid=u.id) }}" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="password" name="password" placeholder="New password" required>
+          <button>Reset</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Stock{% endblock %}
+{% block content %}
+<h1>Stock</h1>
+{% if low %}
+  <div class="flash error">{{ low|length }} product(s) at or below reorder level.</div>
+{% endif %}
+
+<table class="table">
+  <thead><tr><th>Product</th><th>Qty</th><th>Reorder</th><th>Restock</th><th>Adjust</th></tr></thead>
+  <tbody>
+  {% for p in products %}
+    <tr class="{{ 'low' if p.low_stock }}">
+      <td>{{ p.name }}</td>
+      <td>{{ p.quantity }}</td>
+      <td>{{ p.reorder_level }}</td>
+      <td>
+        {% if current_user.is_manager %}
+        <form method="post" action="{{ url_for('stock.restock', pid=p.id) }}" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="number" name="amount" value="10" min="1" style="width:70px">
+          <button>Add</button>
+        </form>
+        {% endif %}
+      </td>
+      <td>
+        {% if current_user.is_manager %}
+        <form method="post" action="{{ url_for('stock.adjust', pid=p.id) }}" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="number" name="quantity" value="{{ p.quantity }}" style="width:70px">
+          <button>Set</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

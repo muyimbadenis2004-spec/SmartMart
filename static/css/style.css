@@ -1,0 +1,83 @@
+:root {
+  --primary: #4f46e5;
+  --bg: #f6f7fb;
+  --card: #fff;
+  --border: #e5e7eb;
+  --danger: #dc2626;
+  --text: #111827;
+  --muted: #6b7280;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+       background: var(--bg); color: var(--text); }
+
+.navbar { background: var(--primary); color: #fff; padding: 0.6rem 1.2rem;
+          display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.navbar .brand { font-weight: 700; font-size: 1.15rem; color: #fff; text-decoration: none; }
+.navbar ul { list-style: none; display: flex; gap: 1rem; margin: 0; padding: 0; flex-wrap: wrap; }
+.navbar a { color: #e0e7ff; text-decoration: none; }
+.navbar a:hover { color: #fff; }
+.navbar .right { margin-left: auto; }
+.navbar .menu-toggle { display: none; background: transparent; border: 1px solid #fff;
+                       color: #fff; padding: 0.2rem 0.5rem; border-radius: 4px; }
+@media (max-width: 900px) {
+  .navbar ul { display: none; flex-direction: column; width: 100%; }
+  .navbar ul.open { display: flex; }
+  .navbar .menu-toggle { display: inline-block; }
+}
+
+.container { max-width: 1200px; margin: 1.5rem auto; padding: 0 1rem; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+        padding: 1rem; margin: 0.75rem 0; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; }
+.tile { display: block; background: var(--card); border: 1px solid var(--border);
+        border-radius: 10px; padding: 1rem; text-decoration: none; color: var(--text); }
+.tile:hover { border-color: var(--primary); }
+.tile h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+.tile p { margin: 0; color: var(--muted); }
+
+.grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+             gap: 0.5rem; align-items: end; }
+label { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--muted); gap: 0.2rem; }
+input, select, button { font: inherit; padding: 0.45rem 0.6rem; border: 1px solid var(--border);
+                        border-radius: 6px; background: #fff; }
+button { cursor: pointer; background: var(--primary); color: #fff; border: none; }
+button:hover { filter: brightness(1.05); }
+button.danger { background: var(--danger); }
+
+.inline { display: flex; gap: 0.4rem; align-items: end; flex-wrap: wrap; }
+.toolbar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin: 0.5rem 0; }
+
+.table { width: 100%; border-collapse: collapse; background: var(--card);
+         border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.table th, .table td { padding: 0.55rem 0.7rem; text-align: left; border-bottom: 1px solid var(--border); }
+.table th { background: #f3f4f6; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.table tr.low { background: #fef2f2; }
+
+.flash { padding: 0.6rem 0.8rem; border-radius: 6px; margin-bottom: 0.6rem; }
+.flash.success { background: #dcfce7; color: #166534; }
+.flash.error { background: #fee2e2; color: #991b1b; }
+
+.login-card { max-width: 360px; margin: 4rem auto; }
+.login-card input { width: 100%; }
+.hint { color: var(--muted); font-size: 0.85rem; }
+
+.btn { display: inline-block; padding: 0.45rem 0.8rem; background: var(--primary);
+       color: #fff; text-decoration: none; border-radius: 6px; }
+
+.pos { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 720px) { .pos { grid-template-columns: 1fr; } }
+.results { list-style: none; padding: 0; margin: 0.4rem 0; }
+.results li { padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px;
+              margin-bottom: 0.3rem; cursor: pointer; background: #fff; }
+.results li:hover { border-color: var(--primary); }
+.results small { color: var(--muted); }
+.total { font-size: 1.1rem; }
+
+.status { padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.status.draft { background: #e5e7eb; }
+.status.ordered { background: #dbeafe; color: #1e40af; }
+.status.received { background: #dcfce7; color: #166534; }
+.status.cancelled { background: #fee2e2; color: #991b1b; }

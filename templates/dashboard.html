@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p>Welcome, <strong>{{ user.username }}</strong> ({{ user.role }}).</p>
+
+{% if not open_shift %}
+  <div class="flash error">No open shift. <a href="{{ url_for('shifts.index') }}">Open a shift</a> before selling.</div>
+{% endif %}
+
+<div class="grid">
+  <div class="tile"><h3>Last 24h revenue</h3><p>{{ fmt_money(today_rev) }}</p></div>
+  <div class="tile"><h3>Low stock items</h3><p>{{ low_count }}</p></div>
+  <div class="tile"><h3>Customers</h3><p>{{ cust_count }}</p></div>
+</div>
+
+<div class="grid">
+  <a class="tile" href="{{ url_for('sales.pos') }}"><h3>Sell</h3><p>Point of sale</p></a>
+  <a class="tile" href="{{ url_for('products.list_products') }}"><h3>Products</h3><p>Catalog</p></a>
+  <a class="tile" href="{{ url_for('stock.index') }}"><h3>Stock</h3><p>Inventory</p></a>
+  <a class="tile" href="{{ url_for('customers.index') }}"><h3>Customers</h3><p>Loyalty</p></a>
+  {% if current_user.is_manager %}
+    <a class="tile" href="{{ url_for('purchases.index') }}"><h3>Purchase Orders</h3><p>Restock</p></a>
+    <a class="tile" href="{{ url_for('finance.index') }}"><h3>Finance</h3><p>P&amp;L</p></a>
+    <a class="tile" href="{{ url_for('reports.index') }}"><h3>Reports</h3><p>Analytics</p></a>
+  {% endif %}
+</div>
+{% endblock %}

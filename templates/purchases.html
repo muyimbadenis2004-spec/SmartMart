@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Purchase Orders{% endblock %}
+{% block content %}
+<h1>Purchase Orders</h1>
+
+<div class="card">
+  <h3>New PO</h3>
+  <form method="post" action="{{ url_for('purchases.new') }}" class="grid-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Supplier
+      <select name="supplier_id" required>
+        {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Expected date <input type="date" name="expected_at"></label>
+    <label>Notes <input name="notes"></label>
+    <button type="submit">Create</button>
+  </form>
+</div>
+
+<table class="table">
+  <thead><tr><th>#</th><th>Supplier</th><th>Status</th><th>Created</th><th>Total</th><th></th></tr></thead>
+  <tbody>
+  {% for p in pos %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td>{{ p.supplier.name if p.supplier else '-' }}</td>
+      <td><span class="status {{ p.status }}">{{ p.status }}</span></td>
+      <td>{{ p.created_at.strftime("%Y-%m-%d") }}</td>
+      <td>{{ fmt_money(p.total_cost) }}</td>
+      <td><a class="btn" href="{{ url_for('purchases.detail', po_id=p.id) }}">Open</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

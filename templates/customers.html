@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<h1>Customers</h1>
+
+<form method="get" class="inline">
+  <input name="q" value="{{ q }}" placeholder="Search name, phone or email">
+  <button>Search</button>
+</form>
+
+<div class="card">
+  <form method="post" action="{{ url_for('customers.add') }}" class="grid-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Name <input name="name" required></label>
+    <label>Phone <input name="phone"></label>
+    <label>Email <input name="email"></label>
+    <label>Address <input name="address"></label>
+    <button type="submit">Add</button>
+  </form>
+</div>
+
+<table class="table">
+  <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Points</th><th>Spent</th><th></th></tr></thead>
+  <tbody>
+  {% for c in customers %}
+    <tr>
+      <td>{{ c.name }}</td>
+      <td>{{ c.phone }}</td>
+      <td>{{ c.email }}</td>
+      <td>{{ c.loyalty_points }}</td>
+      <td>{{ fmt_money(c.total_spent) }}</td>
+      <td><a class="btn" href="{{ url_for('customers.detail', cid=c.id) }}">Open</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

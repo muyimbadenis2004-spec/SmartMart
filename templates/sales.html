@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Sales{% endblock %}
+{% block content %}
+{% if show_history %}
+  <h1>Sales history</h1>
+  <form method="get" class="inline">
+    <input name="q" value="{{ q or '' }}" placeholder="Sale #">
+    <button>Search</button>
+  </form>
+  {% if current_user.is_manager %}
+    <p><a class="btn" href="{{ url_for('sales.export_csv') }}">Export CSV</a></p>
+  {% endif %}
+  <table class="table">
+    <thead><tr><th>#</th><th>When</th><th>Cashier</th><th>Customer</th><th>Total</th><th>Payment</th><th>Flags</th><th></th></tr></thead>
+    <tbody>
+    {% for s in sales %}
+      <tr class="{{ 'low' if s.voided or s.is_refund }}">
+        <td>{{ s.id }}</td>
+        <td>{{ s.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ s.user.username if s.user else '-' }}</td>
+        <td>{{ s.customer.name if s.customer else '-' }}</td>
+        <td>{{ fmt_money(s.total) }}</td>
+        <td>{{ s.payment_method }}</td>
+        <td>{% if s.is_refund %}REFUND{% endif %}{% if s.voided %} VOID{% endif %}</td>
+        <td>
+          <a href="{{ url_for('sales.receipt', sid=s.id) }}" target="_blank">View</a>
+          {% if current_user.is_manager and not s.voided and not s.is_refund %}
+            <form method="post" action="{{ url_for('sales.refund', sid=s.id) }}"
+                  style="display:inline" onsubmit="return confirm('Refund sale #{{ s.id }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="danger">Refund</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <h1>Point of Sale</h1>
+  {% if not shift %}
+    <div class="flash error">No open shift. <a href="{{ url_for('shifts.index') }}">Open a shift</a> to sell.</div>
+  {% endif %}
+  <div class="pos">
+    <div class="pos-left">
+      <input id="search" placeholder="Search or scan barcode..." autofocus>
+      <p class="hint">Tip: barcode scanners type the code and press Enter.</p>
+      <ul id="results" class="results"></ul>
+    </div>
+    <div class="pos-right card">
+      <h3>Cart</h3>
+      <table class="table" id="cart">
+        <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Sub</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="total">Total: <strong id="total">{{ CURRENCY }}0.00</strong></p>
+      <div class="grid-form">
+        <label>Customer
+          <input id="customer" placeholder="Search name/phone" autocomplete="off">
+          <input type="hidden" id="customer_id">
+        </label>
+        <label>Discount code <input id="discount" placeholder="e.g. SAVE10"></label>
+        <label>Payment
+          <select id="payment">
+            <option value="cash">Cash</option>
+            <option value="card">Card</option>
+            <option value="mobile">Mobile</option>
+          </select>
+        </label>
+        <label>Paid <input id="paid" type="number" step="0.01" placeholder="0.00"></label>
+      </div>
+      <ul id="customer_results" class="results"></ul>
+      <button id="checkout" class="primary">Complete Sale</button>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if not show_history %}
+<script>
+const cart = [];
+const $ = s => document.querySelector(s);
+let lastResults = [];
+
+function addToCart(product) {
+  const existing = cart.find(c => c.id === product.id);
+  if (existing) existing.qty = Math.min(existing.qty + 1, product.quantity);
+  else cart.push({ id: product.id, name: product.name, price: product.price,
+                   stock: product.quantity, qty: 1 });
+  renderCart();
+}
+
+$("#search").addEventListener("input", async (e) => {
+  const q = e.target.value.trim();
+  if (!q) { $("#results").innerHTML = ""; return; }
+  try {
+    lastResults = await api("/products/api/search?q=" + encodeURIComponent(q));
+    $("#results").innerHTML = lastResults.map(p =>
+      `<li data-id="${p.id}">${p.name}
+        <small>(${p.sku}) ${p.price.toFixed(2)} · stock ${p.quantity}</small>
+      </li>`).join("");
+  } catch (err) { console.error(err); }
+});
+
+$("#search").addEventListener("keydown", async (e) => {
+  if (e.key !== "Enter") return;
+  const code = e.target.value.trim();
+  if (!code) return;
+  e.preventDefault();
+  try {
+    const p = await api("/products/api/barcode/" + encodeURIComponent(code));
+    addToCart(p);
+  } catch {
+    if (lastResults && lastResults.length === 1) addToCart(lastResults[0]);
+    else alert("No product matched: " + code);
+  }
+  e.target.value = ""; $("#results").innerHTML = "";
+});
+
+$("#results").addEventListener("click", (e) => {
+  const li = e.target.closest("li"); if (!li) return;
+  const p = lastResults.find(x => x.id === +li.dataset.id);
+  if (p) addToCart(p);
+  $("#search").value = ""; $("#results").innerHTML = "";
+});
+
+function renderCart() {
+  const tbody = $("#cart tbody");
+  tbody.innerHTML = cart.map((c, i) => `
+    <tr>
+      <td>${c.name}</td>
+      <td><input type="number" min="1" max="${c.stock}" value="${c.qty}" data-i="${i}"></td>
+      <td>${c.price.toFixed(2)}</td>
+      <td>${(c.qty * c.price).toFixed(2)}</td>
+      <td><button class="danger" data-remove="${i}">x</button></td>
+    </tr>`).join("");
+  const total = cart.reduce((s, c) => s + c.qty * c.price, 0);
+  $("#total").textContent = "{{ CURRENCY }}" + total.toFixed(2);
+}
+
+$("#cart").addEventListener("input", (e) => {
+  if (e.target.tagName === "INPUT") {
+    const i = +e.target.dataset.i;
+    cart[i].qty = Math.max(1, Math.min(cart[i].stock, +e.target.value));
+    renderCart();
+  }
+});
+
+$("#cart").addEventListener("click", (e) => {
+  const i = e.target.dataset.remove;
+  if (i !== undefined) { cart.splice(+i, 1); renderCart(); }
+});
+
+// Customer autocomplete
+$("#customer").addEventListener("input", async (e) => {
+  const q = e.target.value.trim();
+  if (!q) { $("#customer_results").innerHTML = ""; return; }
+  try {
+    const items = await api("/customers/api/search?q=" + encodeURIComponent(q));
+    $("#customer_results").innerHTML = items.map(c =>
+      `<li data-id="${c.id}" data-name="${c.name}">${c.name} <small>${c.phone || ""}</small></li>`
+    ).join("");
+  } catch (err) { console.error(err); }
+});
+
+$("#customer_results").addEventListener("click", (e) => {
+  const li = e.target.closest("li"); if (!li) return;
+  $("#customer").value = li.dataset.name;
+  $("#customer_id").value = li.dataset.id;
+  $("#customer_results").innerHTML = "";
+});
+
+$("#checkout").addEventListener("click", async () => {
+  if (!cart.length) return alert("Cart is empty");
+  try {
+    const data = await api("/sales/api/checkout", {
+      method: "POST",
+      body: {
+        payment_method: $("#payment").value,
+        customer_id: $("#customer_id").value || null,
+        discount_code: $("#discount").value.trim() || null,
+        amount_paid: parseFloat($("#paid").value) || null,
+        items: cart.map(c => ({ product_id: c.id, quantity: c.qty }))
+      }
+    });
+    const open = confirm(
+      "Sale #" + data.sale_id + " completed. Total " + data.total.toFixed(2) +
+      "\n\nOpen printable receipt?"
+    );
+    if (open) window.open(data.receipt_url, "_blank");
+    cart.length = 0; renderCart();
+    $("#customer_id").value = ""; $("#customer").value = "";
+    $("#discount").value = ""; $("#paid").value = "";
+  } catch (err) {
+    alert(err.message || "Checkout failed");
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

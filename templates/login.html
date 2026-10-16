@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="card login-card">
+  <h2>Sign in to {{ STORE_NAME }}</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Username <input name="username" required autofocus></label>
+    <label>Password <input type="password" name="password" required></label>
+    <button type="submit">Login</button>
+  </form>
+  <p class="hint">Default: admin / admin123</p>
+</div>
+{% endblock %}

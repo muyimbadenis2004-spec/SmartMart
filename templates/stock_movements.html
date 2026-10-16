@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Stock Movements{% endblock %}
+{% block content %}
+<h1>Stock Movements</h1>
+
+<form method="get" class="inline">
+  <label>Product
+    <select name="product_id" onchange="this.form.submit()">
+      <option value="">All</option>
+      {% for p in products %}
+        <option value="{{ p.id }}" {{ "selected" if current_product == p.id }}>{{ p.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+
+<table class="table">
+  <thead><tr><th>When</th><th>Product</th><th>Change</th><th>Reason</th><th>Ref</th><th>User</th><th>Note</th></tr></thead>
+  <tbody>
+  {% for m in movements %}
+    <tr>
+      <td>{{ m.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+      <td>{{ m.product.name if m.product else '-' }}</td>
+      <td>{{ "%+d"|format(m.change) }}</td>
+      <td>{{ m.reason }}</td>
+      <td>{{ m.reference or '-' }}</td>
+      <td>{{ m.user.username if m.user else '-' }}</td>
+      <td>{{ m.note or '' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

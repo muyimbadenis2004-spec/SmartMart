@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block content %}
+<h1>{{ customer.name }}</h1>
+<p>{{ customer.phone }} · {{ customer.email }} · {{ customer.address }}</p>
+<p>Points: <strong>{{ customer.loyalty_points }}</strong> ·
+   Total spent: <strong>{{ fmt_money(customer.total_spent) }}</strong></p>
+
+<h3>Purchase history</h3>
+<table class="table">
+  <thead><tr><th>#</th><th>When</th><th>Total</th><th></th></tr></thead>
+  <tbody>
+  {% for s in sales %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.timestamp.strftime("%Y-%m-%d %H:%M") }}</td>
+      <td>{{ fmt_money(s.total) }}</td>
+      <td><a href="{{ url_for('sales.receipt', sid=s.id) }}" target="_blank">Receipt</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p><a class="btn" href="{{ url_for('customers.index') }}">Back</a></p>
+{% endblock %}

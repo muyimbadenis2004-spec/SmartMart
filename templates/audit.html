@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+<h1>Audit Log</h1>
+
+<form method="get" class="inline">
+  <label>User
+    <select name="user_id">
+      <option value="">All</option>
+      {% for u in users %}
+        <option value="{{ u.id }}" {{ "selected" if current_user_id == u.id }}>{{ u.username }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Action <input name="action" value="{{ current_action }}"></label>
+  <button>Filter</button>
+  <a class="btn" href="{{ url_for('audit.export_csv') }}">Export CSV</a>
+</form>
+
+<table class="table">
+  <thead><tr><th>When</th><th>User</th><th>Action</th><th>Entity</th><th>ID</th><th>Detail</th><th>IP</th></tr></thead>
+  <tbody>
+  {% for l in logs %}
+    <tr>
+      <td>{{ l.timestamp.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+      <td>{{ l.user_id }}</td>
+      <td>{{ l.action }}</td>
+      <td>{{ l.entity or '' }}</td>
+      <td>{{ l.entity_id or '' }}</td>
+      <td>{{ l.detail or '' }}</td>
+      <td>{{ l.ip or '' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
